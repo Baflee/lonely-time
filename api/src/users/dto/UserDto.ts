@@ -7,6 +7,10 @@ export class CreateUserDto {
     @IsString()
     @MinLength(6)
     password: string;
+
+    @IsString()
+    @MinLength(6)
+    passwordConfirmation: string;
 }
 
 export class LoginUserDto {
@@ -16,12 +20,3 @@ export class LoginUserDto {
     @IsString()
     readonly password: string;
 }
-
-export class AiProfileDto {
-    readonly name: string;
-    readonly role: string;
-    readonly personalityTraits: string[];
-    readonly skills: string[];
-    readonly domainsOfExpertise: string[];
-    readonly languages: string[];
-  }

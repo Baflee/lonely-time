@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../utils/interfaces/user';
 import { usersService } from '../services/users.service';
+import { ResponseErrorRequest } from '../../shared/interfaces/content';
+import { petsService } from '../services/pets.service';
 
 interface State {
     isInitialized: boolean;
@@ -83,16 +85,22 @@ const reducer = (state: State, action: Action): State =>
 
 export interface AuthContextValue extends State {
     // eslint-disable-next-line no-unused-vars
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<ResponseErrorRequest>;
+    signup: (email: string, password: string, passwordConfirmation:string) => Promise<ResponseErrorRequest>;
     logout: () => Promise<void>;
     // eslint-disable-next-line no-unused-vars
+    getPet: (userId: string) => Promise<ResponseErrorRequest>;
+    //setPet: (userId: string, pet: any) => Promise<ResponseErrorRequest>;
     updateUser: (user: User | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue>({
     ...initialState,
-    login: () => Promise.resolve(),
+    login: () => Promise.resolve({} as ResponseErrorRequest),
+    signup: () => Promise.resolve({} as ResponseErrorRequest),
     logout: () => Promise.resolve(),
+    getPet: () => Promise.resolve({} as ResponseErrorRequest),
+    //setPet: () => Promise.resolve({} as ResponseErrorRequest),
     updateUser: () => Promise.resolve(),
 });
 
@@ -140,23 +148,24 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
         initialize();
     }, []);
 
-    const login = useCallback(
-        async (email: string, password: string): Promise<void> => {
-            const authResponse = await usersService.logIn({ email, password });
-            console.log()
-            await AsyncStorage.setItem('ACCESS_TOKEN', authResponse.authToken);
-            await AsyncStorage.setItem('USER', JSON.stringify(authResponse.user));
+    const login = useCallback(async (email: string, password: string): Promise<ResponseErrorRequest> => {
+        return await usersService.logIn({ email, password });
+    }, [dispatch]);
+    
+      
+    const signup = useCallback(async (email: string, password: string, passwordConfirmation: string): Promise<ResponseErrorRequest> => {
+        return await usersService.signUp({ email, password, passwordConfirmation });
+    }, []);
 
-            dispatch({
-                type: ActionType.LOGIN,
-                payload: {
-                    user: authResponse.user,
-                },
-            });
-        },
-        [dispatch],
-    );
-
+    const getPet = useCallback(async (userId: string): Promise<ResponseErrorRequest> => {
+        return await petsService.getPet(userId);
+    }, [dispatch]);
+    
+    /*
+    const setPet = useCallback(async (email: string, password: string, passwordConfirmation: string): Promise<ResponseErrorRequest> => {
+        return await petsService.signUp({ email, password, passwordConfirmation });
+    }, []);
+    */
     const logout = useCallback(async (): Promise<void> => {
         AsyncStorage.removeItem('ACCESS_TOKEN');
         AsyncStorage.removeItem('USER');
@@ -181,8 +190,11 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
             value={{
                 ...state,
                 login,
+                signup,
                 logout,
-                updateUser,
+                updateUser, 
+                //setPet, 
+                getPet
             }}
         >
             {children}

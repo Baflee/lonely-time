@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "178304233354",
+    "project_id": "finkify-37871",
+    "storage_bucket": "finkify-37871.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178304233354:android:37d80268463e02fec6e273",
+        "android_client_info": {
+          "package_name": "com.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuupnlRXCSEuw5wI1CnsLWwvjoec-dm70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

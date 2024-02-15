@@ -1,25 +1,48 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../hooks/auth';
 
 
 const Login = ({ navigation }: { navigation: any }) => {
-    const { login } = useAuth();
+    const { signup, login } = useAuth();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState<string>('');
+    const [isSignUp, setIsSignUp] = useState<boolean>(false); // Toggle between login and signup
+    const [errorMessage, setErrorMessage] = useState<string>(''); // New state for storing the error message
 
-    const handleLogin = async () => {
+    const handleLoginOrSignup = async () => {
+        setErrorMessage(''); // Clear any existing error message
         try {
-            await login(email, password);
-            navigation.navigate('Home');
+            if(isSignUp) {
+                // Add your signup logic here
+                const signupMessage = await signup(email, password, passwordConfirmation);
+                if (signupMessage.statusCode >= 200 && signupMessage.statusCode < 300) {
+                    setIsSignUp(false); // If signup is successful, switch to login mode
+                    setErrorMessage(''); // Clear any existing error message
+                } else {
+                    setErrorMessage(signupMessage.statusCode + ' : ' + signupMessage.message); // Set the error message to display it
+                }
+            } else {
+                const loginMessage = await login(email, password);
+                if (loginMessage && loginMessage  && loginMessage.statusCode >= 200 && loginMessage.statusCode < 300) {
+                    setErrorMessage(''); // Clear any existing error message
+                    navigation.navigate('Home');
+                } else {
+                    setErrorMessage(loginMessage.statusCode + ' : ' + loginMessage.message); // Set the error message to display it
+                }
+            }
         } catch (error) {
-            console.error('Login error:', JSON.stringify(error));
+            // Here, extract the custom error message from your error object
+            // Adjust the path according to your error structure
+            setErrorMessage(JSON.stringify(error)); // Set the error message to display it
+            console.error('Error:', JSON.stringify(error));
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Connexion</Text>
+            <Text style={styles.title}>{isSignUp ? 'Inscription' : 'Connexion'}</Text>
 
             <TextInput
                 style={styles.input}
@@ -36,11 +59,31 @@ const Login = ({ navigation }: { navigation: any }) => {
                 secureTextEntry
             />
 
+            {isSignUp && (
+                <TextInput
+                    style={styles.input}
+                    onChangeText={setPasswordConfirmation}
+                    value={passwordConfirmation}
+                    placeholder="Confirmez le mot de passe"
+                    secureTextEntry
+                />
+            )}
+
             <Button
-                onPress={handleLogin}
-                title="Se connecter"
+                onPress={handleLoginOrSignup}
+                title={isSignUp ? "S'inscrire" : "Se connecter"}
                 color="#4B5563"
             />
+
+            {errorMessage ? (
+                <Text style={styles.error}>{errorMessage}</Text>
+            ) : null}
+
+            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+                <Text style={styles.toggle}>
+                    {isSignUp ? 'Déjà inscrit? Se connecter' : "S'inscrire"}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -52,18 +95,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 20, // Adjust size as per your design
+        fontSize: 20,
         marginBottom: 16,
     },
     input: {
         height: 40,
         borderBottomWidth: 1,
-        borderBottomColor: '#A0AEC0', // This is an approximation of Tailwind's gray-400
+        borderBottomColor: '#A0AEC0',
         marginBottom: 16,
         paddingHorizontal: 8,
         width: '80%',
     },
+    toggle: {
+        marginTop: 15,
+        color: '#4B5563',
+    },
+    error: { // Style for the error message
+        color: 'red',
+        marginTop: 10,
+    },
 });
 
 export default Login;
-

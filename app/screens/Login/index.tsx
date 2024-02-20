@@ -13,7 +13,6 @@ const Login = ({ navigation }: { navigation: any }) => {
 
     const handleLoginOrSignup = async () => {
         setErrorMessage(''); // Clear any existing error message
-        try {
             if(isSignUp) {
                 // Add your signup logic here
                 const signupMessage = await signup(email, password, passwordConfirmation);
@@ -25,19 +24,13 @@ const Login = ({ navigation }: { navigation: any }) => {
                 }
             } else {
                 const loginMessage = await login(email, password);
-                if (loginMessage && loginMessage  && loginMessage.statusCode >= 200 && loginMessage.statusCode < 300) {
+                if (loginMessage && loginMessage.statusCode >= 200 && loginMessage.statusCode < 300) {
                     setErrorMessage(''); // Clear any existing error message
                     navigation.navigate('Home');
                 } else {
                     setErrorMessage(loginMessage.statusCode + ' : ' + loginMessage.message); // Set the error message to display it
                 }
             }
-        } catch (error) {
-            // Here, extract the custom error message from your error object
-            // Adjust the path according to your error structure
-            setErrorMessage(JSON.stringify(error)); // Set the error message to display it
-            console.error('Error:', JSON.stringify(error));
-        }
     };
 
     return (

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { OpenAI } from 'openai';
-import { CreatePetDto, GetPetDto, PetRequestDto, PetResponseDto } from './dto/petsDto';
+import { CreatePetDto, GetPetDto, PetRequestDto } from './dto/petsDto';
 import { ObjectId } from 'mongodb';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/users/interfaces/users.interface';
 import { Model } from 'mongoose';
 import { Pet } from './interfaces/pets.interface';
+import { ResponseErrorRequest } from '../../../shared/interfaces/content';
 
 
 @Injectable()
@@ -25,10 +26,9 @@ export class PetsService {
 
   public async sendMessage(
     chatRequestDto: PetRequestDto,
-  ): Promise<PetResponseDto | string 
+  ): Promise<ResponseErrorRequest
   > {
-    try {
-      const pet = await this.petModel.findById(chatRequestDto.animalId).exec();
+      const pet = await this.petModel.findById(chatRequestDto.petId).exec();
       if (!pet) {
         throw { statusCode: 404, message: 'Cet animal n\'existe pas' };
       }
@@ -96,48 +96,37 @@ export class PetsService {
       }
 
       if (actualRun.status === 'completed') {
-        const messages = await this.openai.beta.threads.messages.list(
-          pet.threadId,
-        );
-
-        // Assuming `messages.data` contains the messages from a thread
-        const formattedMessages = messages.data.map((message) => {
-          // Extract role to determine if the sender is 'AI' or 'User'
-          const role = message.role === 'assistant' ? pet.name + ' | ' + pet.animal : 'You';
-
-          // Map through the message content to extract and format the text
-          const content = message.content
-            .map((contentItem) => {
-              if ('text' in contentItem && contentItem.type === 'text') {
-                return contentItem.text.value; // Assuming 'value' is the property holding the text
-              }
-              return ''; // Handle other content types (like images or files) as needed
-            })
-            .join(' ');
-
-          // Return each message as a JSON object
-          return { sender: role, message: content };
-        });
-
-        // Wrap the messages array and thread ID in a single JSON object
-        const response = {
-          threadId: pet.threadId, // Assuming this is available in your context
-          messages: formattedMessages
-        };
-
-        // When returning or logging, use `response` directly
-        console.log(response);
-        return response;
-      } else {
-        return 'error';
+        return await this.fetchMessageThread(pet.name, pet.threadId);
       }
-    } catch (error) {
-      console.error('Error in PetService:', error);
-      throw error;
-    }
   }
 
-  async createPet(createPetDto: CreatePetDto) {
+  async fetchMessageThread(petName:string, threadId: string): Promise<ResponseErrorRequest> {
+    try {
+        const messages = await this.openai.beta.threads.messages.list(threadId);
+
+        const formattedMessages = messages.data.map((message) => {
+            const role = message.role === 'assistant' ? petName : "Toi";
+            const content = message.content.map((contentItem) => {
+                if ('text' in contentItem && contentItem.type === 'text') {
+                    return contentItem.text.value;
+                }
+                return ''; // Or handle other content types as needed
+            }).join(' ');
+
+            return { sender: role, message: content };
+        });
+
+        return { statusCode: 200, message: 'Discussion récupérée avec succès', content: {
+            threadId: threadId,
+            messages: formattedMessages
+        }};
+    } catch (error) {
+        console.error('Error fetching message thread:', error);
+        throw { statusCode: 500, message: error }
+    }
+}
+
+  async createPet(createPetDto: CreatePetDto): Promise<ResponseErrorRequest> {
     const { userId, ...petProfileData } = createPetDto;
 
     const user = await this.userModel.findById(new ObjectId(userId));
@@ -159,9 +148,11 @@ export class PetsService {
   
     const newPet = new this.petModel(fullpetProfile);
     newPet.save();
+
+    return { statusCode: 200, message: 'Animal créé avec succès', content: { pet: newPet }};
   }
 
-  async findAllPetsByUserId(getPetDto: GetPetDto): Promise<Pet[]> {
+  async findAllPetsByUserId(getPetDto: GetPetDto): Promise<ResponseErrorRequest> {
     console.log("user : " + JSON.stringify(getPetDto.userId));
     const userObjectId = new ObjectId(getPetDto.userId);
     const user = await this.userModel.findById(userObjectId);
@@ -173,7 +164,7 @@ export class PetsService {
     if (!pets.length) {
       throw { statusCode: 404, message: 'Aucun animal trouver chez cette utilisateur' };
     }
-
-    return pets;
+    console.log("pets : " + JSON.stringify(pets));
+    return { statusCode: 200, message: 'Connexion réussie', content: { pets }};
   }
 }

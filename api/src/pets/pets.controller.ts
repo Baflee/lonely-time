@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { PetsService } from './pets.service';
-import { CreatePetDto, GetPetDto, PetRequestDto } from './dto/petsDto';
+import { CreatePetDto, GetMessagesDto, GetPetDto, PetRequestDto } from './dto/petsDto';
 
 @Controller('pets')
 export class PetsController {
@@ -16,8 +16,13 @@ export class PetsController {
       return this.petsSevice.createPet(createpetDto);
     }
 
-    @Post('/get')
+    @Post('/getPets')
     async findAllPetsByUserId(@Body() getPetDto: GetPetDto) {
       return this.petsSevice.findAllPetsByUserId(getPetDto);
+    }
+
+    @Post('/getMessages')
+    async fetchMessageThread(@Body() getMessagesDto: GetMessagesDto) {
+      return this.petsSevice.fetchMessageThread(getMessagesDto.petName, getMessagesDto.threadId);
     }
 }

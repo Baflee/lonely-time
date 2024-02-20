@@ -46,7 +46,7 @@ export class UsersService {
       console.error(error);
   
       if (!error.statusCode) {
-        throw { statusCode: 500, message: 'Erreur interne du serveur' }; // Internal Server Error
+        throw { statusCode: 500, message: 'Erreur interne du serveur' };
       }
   
       throw error;
@@ -80,7 +80,7 @@ export class UsersService {
       console.error(error);
   
       if (!error.statusCode) {
-        throw { statusCode: 500, message: 'Erreur interne du serveur' }; // Internal Server Error
+        throw { statusCode: 500, message: 'Erreur interne du serveur' };
       };
   
       throw error;

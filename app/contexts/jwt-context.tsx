@@ -89,8 +89,10 @@ export interface AuthContextValue extends State {
     signup: (email: string, password: string, passwordConfirmation:string) => Promise<ResponseErrorRequest>;
     logout: () => Promise<void>;
     // eslint-disable-next-line no-unused-vars
-    getPet: (userId: string) => Promise<ResponseErrorRequest>;
-    //setPet: (userId: string, pet: any) => Promise<ResponseErrorRequest>;
+    getPets: (userId: string) => Promise<ResponseErrorRequest>;
+    createPet: (userId:string, name: string, animal:string, personalityTraits:string[], skills:string[]) => Promise<ResponseErrorRequest>;
+    getMessages: (petName: string,threadId: string) => Promise<ResponseErrorRequest>;
+    sendMessage: (petId: string, message: string) => Promise<ResponseErrorRequest>;
     updateUser: (user: User | null) => void;
 }
 
@@ -99,8 +101,10 @@ export const AuthContext = createContext<AuthContextValue>({
     login: () => Promise.resolve({} as ResponseErrorRequest),
     signup: () => Promise.resolve({} as ResponseErrorRequest),
     logout: () => Promise.resolve(),
-    getPet: () => Promise.resolve({} as ResponseErrorRequest),
-    //setPet: () => Promise.resolve({} as ResponseErrorRequest),
+    getPets: () => Promise.resolve({} as ResponseErrorRequest),
+    createPet: () => Promise.resolve({} as ResponseErrorRequest),
+    getMessages: () => Promise.resolve({} as ResponseErrorRequest),
+    sendMessage: () => Promise.resolve({} as ResponseErrorRequest),
     updateUser: () => Promise.resolve(),
 });
 
@@ -149,7 +153,21 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
     }, []);
 
     const login = useCallback(async (email: string, password: string): Promise<ResponseErrorRequest> => {
-        return await usersService.logIn({ email, password });
+            const authResponse = await usersService.logIn({ email, password });
+            console.log("authResponse : " + JSON.stringify(authResponse));
+            
+            if(authResponse.statusCode >= 200 && authResponse.statusCode < 300) {
+                await AsyncStorage.setItem('ACCESS_TOKEN', authResponse.content.authToken);
+                await AsyncStorage.setItem('REFRESH_TOKEN', authResponse.content.refreshToken);
+                await AsyncStorage.setItem('USER', JSON.stringify(authResponse.content.user));
+                dispatch({
+                    type: ActionType.LOGIN,
+                    payload: {
+                        user: authResponse.content.user,
+                    },
+                });
+            }
+            return authResponse;
     }, [dispatch]);
     
       
@@ -157,9 +175,21 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
         return await usersService.signUp({ email, password, passwordConfirmation });
     }, []);
 
-    const getPet = useCallback(async (userId: string): Promise<ResponseErrorRequest> => {
-        return await petsService.getPet(userId);
-    }, [dispatch]);
+    const getPets = useCallback(async (userId: string): Promise<ResponseErrorRequest> => {
+        return await petsService.getPets(userId);
+    }, []);
+
+    const createPet = useCallback(async (userId:string, name: string, animal:string, personalityTraits:string[], skills:string[]): Promise<ResponseErrorRequest> => {
+        return await petsService.createPet(userId, name, animal, personalityTraits, skills);
+    }, []);
+
+    const getMessages = useCallback(async (petName: string,threadId: string): Promise<ResponseErrorRequest> => {
+        return await petsService.getMessages(petName, threadId);
+    }, []);
+
+    const sendMessage = useCallback(async (petId: string, message: string): Promise<ResponseErrorRequest> => {
+        return await petsService.sendMessage(petId, message);
+    }, []);
     
     /*
     const setPet = useCallback(async (email: string, password: string, passwordConfirmation: string): Promise<ResponseErrorRequest> => {
@@ -193,8 +223,10 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
                 signup,
                 logout,
                 updateUser, 
-                //setPet, 
-                getPet
+                createPet, 
+                getPets,
+                sendMessage,
+                getMessages
             }}
         >
             {children}

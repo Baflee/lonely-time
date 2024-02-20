@@ -1,12 +1,18 @@
 import { IsString } from "class-validator";
 
 export class PetRequestDto {
-    animalId: string;
+    petId: string;
     message: string;
 }
 
 export class GetPetDto {
     userId: string;
+}
+
+
+export class GetMessagesDto {
+    petName: string;
+    threadId: string;
 }
 
 export class PetResponseDto {

@@ -1,64 +1,143 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { Pet } from '../../../shared/interfaces/pet';
 import { useAuth } from '../../hooks/auth';
 import { Picker } from '@react-native-picker/picker';
 
-const Home = () => {
-    const { user, getPet } = useAuth(); // Assuming useAuth provides setPet for fetching pets
-    const [pets, setPets] = useState<Pet[]>([]); // State to hold the list of pets
-    const [selectedPet, setSelectedPet] = useState<Pet>(); // State to hold the selected pet
+const Home = ({ navigation }: { navigation: any }) => {
+    const { user, getPets, logout, sendMessage, getMessages } = useAuth();
+    const [pets, setPets] = useState<Pet[]>([]);
+    const [selectedPet, setSelectedPet] = useState<Pet>();
+    const [message, setMessage] = useState('');
+    const [chatHistory, setChatHistory] = useState<any[]>([]);
 
     useEffect(() => {
-        const fetchPets = async () => {
-            if (user?.id) {
-                const petResponse = await getPet(user.id); // Fetch pets once when the user is defined
-                setPets(petResponse.content || []); // Update the pets state
+        if(user && user._id) {
+            console.log('Effect run', user._id);
+            fetchPets(user._id);
+            console.log('Fetched pets:', pets);
+        }
+    }, [user?._id]);
+
+    useEffect(() => {
+        const fetchInitialMessages = async () => {
+            if (selectedPet) {
+                const messages = await getMessages(selectedPet.animal, selectedPet.threadId);
+                if (Array.isArray(messages.content.messages)) {
+                    setChatHistory(messages.content.messages);
+                } else {
+                    console.error('Expected messages.content.messages to be an array, received:', messages.content.messages);
+                    setChatHistory([{ sender:"Systeme" , message:"Chargement de la discussion"}]);
+                }
             }
         };
-        fetchPets();
-        console.log('Fetching pets... ' + selectedPet);
-    }, [user, getPet]); // Dependency on user and setPet to fetch pets once
+    
+        fetchInitialMessages();
+    }, [selectedPet]);
 
-    // Handler for when a new pet is selected from the Picker
-    const handlePetSelection = (itemValue: string | null) => {
-        setSelectedPet(pets.find(pet => pet._id === itemValue)); // Update the selectedPet state based on selection
-        // Optionally, here you can fetch chat history or other data related to the selected pet
+    const fetchPets = async (userId: string) => {
+        if(userId === undefined) setPets([]);
+        const petResponse = await getPets(userId);
+        setPets(petResponse.content.pets);
     };
 
+    const handlePetSelection = (itemValue: string | null) => {
+        setSelectedPet(pets.find(pet => pet._id === itemValue));
+    };
+    
+    const handleLogout = () => {
+        logout();
+        navigation.navigate('Login');
+    };
+
+    const handleSendMessage = async () => {
+        console.log('Message to send:', message);
+        if(selectedPet) {
+            const updatedDiscussion = await sendMessage(selectedPet?._id, message);
+            if (updatedDiscussion && updatedDiscussion.content && updatedDiscussion.content.messages) {
+                setChatHistory(updatedDiscussion.content.messages);
+            }
+            setMessage('');
+        } else {
+            // Handle the case where messages.content.messages is not an array
+            console.error('Expected messages.content.messages to be an array');
+            setChatHistory([{ sender:"Systeme" , message:"Chargement de la discussion"}]); // Reset or handle as appropriate
+        }
+    };
+    
     return (
         <View style={styles.container}>
             <View style={styles.topBar}>
-                <Text style={styles.logoText}>{user ? user.email : "N/A"}</Text>
                 <Picker
-                    selectedValue={selectedPet ? selectedPet.name : null}
+                    selectedValue={selectedPet ? selectedPet._id : null} // Change to _id for value matching
                     style={styles.dropdown}
                     onValueChange={(itemValue) => handlePetSelection(itemValue)}
                 >
                     {pets.map((pet) => (
-                        <Picker.Item key={pet._id} label={pet.name} value={pet.name} />
+                        <Picker.Item key={pet._id} label={pet.name} value={pet._id} />
                     ))}
                 </Picker>
+                <TouchableOpacity style={styles.button} onPress={handleLogout}>
+                    <Text style={styles.buttonText}>Déconnexion</Text>
+                </TouchableOpacity>
             </View>
             <ScrollView style={styles.historyContainer}>
-                {/* Dynamically add ChatGPT history items here based on selectedPet */}
+                {chatHistory && chatHistory.map((chat, index) => (
+                    <View key={index} style={chat.sender === "Toi" ? styles.userMessageContainer : styles.petMessageContainer}>
+                        <Text style={chat.sender === "Toi" ? styles.userMessageText : styles.petMessageText}>
+                            {chat.message}
+                        </Text>
+                    </View>
+                ))}
             </ScrollView>
             <View style={styles.interactionBox}>
-                {/* This is where you could display selected pet information or images */}
-                <Text style={styles.logoText}>Selected Pet: {selectedPet ? selectedPet.name : 'None'}</Text>
+                <Text style={styles.logoText}>Faim : {selectedPet ? selectedPet.hunger + '%' : 'Chargement'}</Text>
+                <Text style={styles.logoText}>Soif : {selectedPet ? selectedPet.thirst + '%' : 'Chargement'}</Text>
+                <Text style={styles.logoText}>Bohneur : {selectedPet ? selectedPet.happiness + '%' : 'Chargement'}</Text>
+                <Text style={styles.logoText}>Fatigue : {selectedPet ? selectedPet.tiredness + '%' : 'Chargement'}</Text>
             </View>
             <View style={styles.chatInputContainer}>
-                <TextInput
-                    placeholder="Type your message..."
-                    style={styles.chatInput}
-                    onSubmitEditing={() => {/* Handle the submission based on selectedPet */}}
-                />
+            <TextInput
+        placeholder="Type your message..."
+        style={styles.chatInput}
+        value={message}
+        onChangeText={setMessage} // Update message state on change
+        onSubmitEditing={handleSendMessage} // Optionally handle sending on keyboard submit
+    />
+                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                    <Text style={styles.sendButtonText}>⌨️ </Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    sendButton: {
+        marginVertical: 10,
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        justifyContent: 'center',
+    },
+    sendButtonText: {
+        textAlign: 'center',
+        color: '#ffffff',
+        fontSize: 16,
+        justifyContent: 'center',
+    },
+    button: {
+        backgroundColor: '#007bff', // Example blue background
+        padding: 10,
+        borderRadius: 5,
+        width: '40%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        color: '#ffffff', // White text color
+        fontSize: 16,
+    },
     container: {
         flex: 1,
         backgroundColor: '#000', // Assuming a dark theme from the design
@@ -77,7 +156,7 @@ const styles = StyleSheet.create({
     dropdown: {
         color: '#fff',
         backgroundColor: '#333', // Assuming a darker background for the dropdown
-        width: 150,
+        width: '50%',
     },
     historyContainer: {
         flex: 1,
@@ -88,7 +167,7 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         padding: 10,
         margin: 10,
-        height: 150, // Set a fixed height or make it responsive as needed
+        height: 150,
     },
     chatInputContainer: {
         borderTopWidth: 1,
@@ -96,13 +175,31 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     chatInput: {
-        color: '#fff',
+        color: '#ffffff',
         borderWidth: 1,
         borderColor: '#fff',
         padding: 10,
         borderRadius: 5,
     },
-    // Add styles for other components as needed
-});
+    userMessageContainer: {
+        alignSelf: 'flex-end',
+        margin: 5,
+        padding: 10,
+        backgroundColor: '#007bff', // Choose a color that suits your app theme
+        borderRadius: 10,
+    },
+    petMessageContainer: {
+        alignSelf: 'flex-start',
+        margin: 5,
+        padding: 10,
+        backgroundColor: '#dddddd', // Light gray for contrast
+        borderRadius: 10,
+    },
+    userMessageText: {
+        color: '#ffffff', // White text for the user messages
+    },
+    petMessageText: {
+        color: '#000000', // Dark text for pet messages
+    },});
 
 export default Home;

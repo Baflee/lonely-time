@@ -154,7 +154,6 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
 
     const login = useCallback(async (email: string, password: string): Promise<ResponseErrorRequest> => {
             const authResponse = await usersService.logIn({ email, password });
-            console.log("authResponse : " + JSON.stringify(authResponse));
             
             if(authResponse.statusCode >= 200 && authResponse.statusCode < 300) {
                 await AsyncStorage.setItem('ACCESS_TOKEN', authResponse.content.authToken);

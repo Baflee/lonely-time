@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, NativeEventEmitter, NativeModules } from 'react-native';
 import { Pet } from '../../../shared/interfaces/pet';
 import { useAuth } from '../../hooks/auth';
 import { Picker } from '@react-native-picker/picker';
@@ -10,12 +10,12 @@ const Home = ({ navigation }: { navigation: any }) => {
     const [selectedPet, setSelectedPet] = useState<Pet>();
     const [message, setMessage] = useState('');
     const [chatHistory, setChatHistory] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false); 
+    const [lastShakeTime, setLastShakeTime] = useState(0);
 
     useEffect(() => {
         if(user && user._id) {
-            console.log('Effect run', user._id);
             fetchPets(user._id);
-            console.log('Fetched pets:', pets);
         }
     }, [user?._id]);
 
@@ -26,8 +26,7 @@ const Home = ({ navigation }: { navigation: any }) => {
                 if (Array.isArray(messages.content.messages)) {
                     setChatHistory(messages.content.messages);
                 } else {
-                    console.error('Expected messages.content.messages to be an array, received:', messages.content.messages);
-                    setChatHistory([{ sender:"Systeme" , message:"Chargement de la discussion"}]);
+                    setChatHistory([{ sender: "System", message: "Chargement de la page" }]);
                 }
             }
         };
@@ -35,54 +34,118 @@ const Home = ({ navigation }: { navigation: any }) => {
         fetchInitialMessages();
     }, [selectedPet]);
 
+    useEffect(() => {
+        const eventEmitter = new NativeEventEmitter(NativeModules.ShakeDetector);
+    
+        const handleShake = (event: any) => {
+            // Assurez-vous d'avoir un délai suffisant entre les secousses pour éviter le spam
+            const now = Date.now();
+            if (!isLoading && now - lastShakeTime > 20000 && event && event.message) { // Exemple: 20 secondes de délai
+                // Définissez votre message ici ou utilisez `event.message` si disponible
+                sendShakeMessage(event.message);
+                setLastShakeTime(now);
+            }
+        };
+    
+        // Abonnement à l'événement de secousse
+        const subscription = eventEmitter.addListener('onShake', handleShake);
+    
+        // Nettoyage
+        return () => {
+            subscription.remove();
+        };
+    }, [isLoading, lastShakeTime]);
+
+    const sendShakeMessage = async (messageToSend: string) => {
+        setIsLoading(true);
+        try {
+            if(selectedPet) {
+                const updatedDiscussion = await sendMessage(selectedPet._id, messageToSend);
+                if (updatedDiscussion && updatedDiscussion.content && updatedDiscussion.content.messages) {
+                    setChatHistory(updatedDiscussion.content.messages);
+                }
+            }
+        } catch (error) {
+            console.error("Erreur lors de l'envoi du message de secousse", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const fetchPets = async (userId: string) => {
-        if(userId === undefined) setPets([]);
-        const petResponse = await getPets(userId);
-        setPets(petResponse.content.pets);
+        if(userId === undefined) {
+            setPets([]);
+            setSelectedPet(undefined);
+        } else {
+            const petResponse = await getPets(userId);
+            const fetchedPets = petResponse.content.pets;
+            setPets(fetchedPets);
+    
+            // Select the first pet by default
+            if (fetchedPets.length > 0 && !selectedPet) {
+                setSelectedPet(fetchedPets[0]);
+            }
+        }
     };
 
     const handlePetSelection = (itemValue: string | null) => {
         setSelectedPet(pets.find(pet => pet._id === itemValue));
     };
-    
+
     const handleLogout = () => {
         logout();
         navigation.navigate('Login');
     };
 
     const handleSendMessage = async () => {
-        console.log('Message to send:', message);
+        const trimmedMessage = message.trim();
+        if (!trimmedMessage) {
+            console.log("Message is empty, not sending.");
+            return;
+        }
+    
+        setIsLoading(true);
         if(selectedPet) {
-            const updatedDiscussion = await sendMessage(selectedPet?._id, message);
+            const updatedDiscussion = await sendMessage(selectedPet._id, trimmedMessage); // Ensure you're sending the trimmed message
             if (updatedDiscussion && updatedDiscussion.content && updatedDiscussion.content.messages) {
                 setChatHistory(updatedDiscussion.content.messages);
             }
-            setMessage('');
+            setMessage(''); // Reset the message input after sending
         } else {
-            // Handle the case where messages.content.messages is not an array
-            console.error('Expected messages.content.messages to be an array');
-            setChatHistory([{ sender:"Systeme" , message:"Chargement de la discussion"}]); // Reset or handle as appropriate
+            setChatHistory([{ sender:"System", message:"Chargement de la page"}]);
         }
+        setIsLoading(false);
     };
-    
+
+    const navigateToAddPet = () => {
+        navigation.navigate('PetForm');
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.topBar}>
                 <Picker
-                    selectedValue={selectedPet ? selectedPet._id : null} // Change to _id for value matching
+                    selectedValue={selectedPet ? selectedPet._id : null}
                     style={styles.dropdown}
                     onValueChange={(itemValue) => handlePetSelection(itemValue)}
                 >
-                    {pets.map((pet) => (
-                        <Picker.Item key={pet._id} label={pet.name} value={pet._id} />
-                    ))}
+                    {pets.length > 0 ? (
+                        pets.map((pet) => (
+                            <Picker.Item key={pet._id} label={pet.name} value={pet._id} />
+                        ))
+                    ) : (
+                        <Picker.Item label="No pets available" value="none" />
+                    )}
                 </Picker>
-                <TouchableOpacity style={styles.button} onPress={handleLogout}>
+                <TouchableOpacity onPress={navigateToAddPet} style={styles.addButton}>
+                    <Text style={styles.buttonText}>+</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                     <Text style={styles.buttonText}>Déconnexion</Text>
                 </TouchableOpacity>
             </View>
             <ScrollView style={styles.historyContainer}>
-                {chatHistory && chatHistory.map((chat, index) => (
+                {chatHistory.map((chat, index) => (
                     <View key={index} style={chat.sender === "Toi" ? styles.userMessageContainer : styles.petMessageContainer}>
                         <Text style={chat.sender === "Toi" ? styles.userMessageText : styles.petMessageText}>
                             {chat.message}
@@ -91,21 +154,44 @@ const Home = ({ navigation }: { navigation: any }) => {
                 ))}
             </ScrollView>
             <View style={styles.interactionBox}>
-                <Text style={styles.logoText}>Faim : {selectedPet ? selectedPet.hunger + '%' : 'Chargement'}</Text>
-                <Text style={styles.logoText}>Soif : {selectedPet ? selectedPet.thirst + '%' : 'Chargement'}</Text>
-                <Text style={styles.logoText}>Bohneur : {selectedPet ? selectedPet.happiness + '%' : 'Chargement'}</Text>
-                <Text style={styles.logoText}>Fatigue : {selectedPet ? selectedPet.tiredness + '%' : 'Chargement'}</Text>
+                <View style={styles.petNameContainer}>
+                    <Text style={styles.petNameText}>
+                        {selectedPet ? selectedPet.animal : 'Chargement'}
+                    </Text>
+                </View>
+                <View style={styles.statsContainer}>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statText}>Faim</Text>
+                        <Text style={styles.statValue}>{selectedPet ? selectedPet.hunger + '%' : '...'}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statText}>Soif</Text>
+                        <Text style={styles.statValue}>{selectedPet ? selectedPet.thirst + '%' : '...'}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statText}>Bonheur</Text>
+                        <Text style={styles.statValue}>{selectedPet ? selectedPet.happiness + '%' : '...'}</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statText}>Fatigue</Text>
+                        <Text style={styles.statValue}>{selectedPet ? selectedPet.tiredness + '%' : '...'}</Text>
+                    </View>
+                </View>
             </View>
             <View style={styles.chatInputContainer}>
-            <TextInput
-        placeholder="Type your message..."
-        style={styles.chatInput}
-        value={message}
-        onChangeText={setMessage} // Update message state on change
-        onSubmitEditing={handleSendMessage} // Optionally handle sending on keyboard submit
-    />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Text style={styles.sendButtonText}>⌨️ </Text>
+                <TextInput
+                    placeholder="Type your message..."
+                    style={styles.chatInput}
+                    value={message}
+                    onChangeText={setMessage}
+                    editable={!isLoading}
+                />
+                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage} disabled={isLoading}>
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                        <Text style={styles.sendButtonText}>⌨️</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </View>
@@ -113,49 +199,24 @@ const Home = ({ navigation }: { navigation: any }) => {
 };
 
 const styles = StyleSheet.create({
-    sendButton: {
-        marginVertical: 10,
-        backgroundColor: '#007bff',
-        padding: 10,
-        borderRadius: 5,
-        justifyContent: 'center',
-    },
-    sendButtonText: {
-        textAlign: 'center',
-        color: '#ffffff',
-        fontSize: 16,
-        justifyContent: 'center',
-    },
-    button: {
-        backgroundColor: '#007bff', // Example blue background
-        padding: 10,
-        borderRadius: 5,
-        width: '40%',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonText: {
-        color: '#ffffff', // White text color
-        fontSize: 16,
-    },
     container: {
         flex: 1,
-        backgroundColor: '#000', // Assuming a dark theme from the design
+        backgroundColor: '#F0F0F0',
     },
     topBar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#fff', // If there is a separator in the design
+        backgroundColor: '#EE99C2',
     },
-    logoText: {
-        color: '#fff',
+    infoText: {
+        color: '#000000',
+        fontSize: 14,
     },
     dropdown: {
-        color: '#fff',
-        backgroundColor: '#333', // Assuming a darker background for the dropdown
+        color: '#000000',
+        backgroundColor: '#FFFFFF',
         width: '50%',
     },
     historyContainer: {
@@ -163,43 +224,104 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     interactionBox: {
-        borderWidth: 1,
-        borderColor: '#fff',
         padding: 10,
+        alignItems: 'center',
+    },
+    petNameContainer: {
+        backgroundColor: '#EE99C2',
+        padding: 10,
+        borderRadius: 10,
         margin: 10,
-        height: 150,
+        width: '80%',
+    },
+    petNameText: {
+        color: '#FFFFFF',
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+    },
+    statBox: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#EE99C2',
+        padding: 10,
+        borderRadius: 10,
+        margin: 5,
+        width: '20%', 
+    },
+    statText: {
+        color: '#FFFFFF',
+        fontSize: 10,
+        marginBottom: 5,
+    },
+    statValue: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
     },
     chatInputContainer: {
-        borderTopWidth: 1,
-        borderTopColor: '#fff',
         padding: 10,
+        backgroundColor: '#FFFFFF',
     },
     chatInput: {
-        color: '#ffffff',
-        borderWidth: 1,
-        borderColor: '#fff',
+        color: '#000000',
+        padding: 10,
+        marginBottom: 10,
+        borderRadius: 5,
+        backgroundColor: '#FFFFFF',
+    },
+    sendButton: {
         padding: 10,
         borderRadius: 5,
+        justifyContent: 'center',
+        backgroundColor: '#EE99C2',
+    },
+    addButton: {
+        padding: 10,
+        borderRadius: 5,
+        backgroundColor: '#9BCF53',
+        justifyContent: 'center',
+    },
+    sendButtonText: {
+        textAlign: 'center',
+        color: '#000000',
+        fontSize: 16,
+    },
+    logoutButton: {
+        backgroundColor: '#FF0000',
+        padding: 10,
+        borderRadius: 5,
+        width: '30%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 12,
     },
     userMessageContainer: {
         alignSelf: 'flex-end',
         margin: 5,
         padding: 10,
-        backgroundColor: '#007bff', // Choose a color that suits your app theme
+        backgroundColor: '#EE99C2',
         borderRadius: 10,
     },
     petMessageContainer: {
         alignSelf: 'flex-start',
         margin: 5,
         padding: 10,
-        backgroundColor: '#dddddd', // Light gray for contrast
+        backgroundColor: '#dddddd',
         borderRadius: 10,
     },
     userMessageText: {
-        color: '#ffffff', // White text for the user messages
+        color: '#ffffff',
     },
     petMessageText: {
-        color: '#000000', // Dark text for pet messages
-    },});
+        color: '#000000',
+    },
+});
 
 export default Home;

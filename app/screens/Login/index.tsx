@@ -8,13 +8,12 @@ const Login = ({ navigation }: { navigation: any }) => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [passwordConfirmation, setPasswordConfirmation] = useState<string>('');
-    const [isSignUp, setIsSignUp] = useState<boolean>(false); // Toggle between login and signup
-    const [errorMessage, setErrorMessage] = useState<string>(''); // New state for storing the error message
+    const [isSignUp, setIsSignUp] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
 
     const handleLoginOrSignup = async () => {
-        setErrorMessage(''); // Clear any existing error message
+        setErrorMessage('');
             if(isSignUp) {
-                // Add your signup logic here
                 const signupMessage = await signup(email, password, passwordConfirmation);
                 if (signupMessage.statusCode >= 200 && signupMessage.statusCode < 300) {
                     setIsSignUp(false); // If signup is successful, switch to login mode
@@ -26,7 +25,7 @@ const Login = ({ navigation }: { navigation: any }) => {
                 const loginMessage = await login(email, password);
                 if (loginMessage && loginMessage.statusCode >= 200 && loginMessage.statusCode < 300) {
                     setErrorMessage(''); // Clear any existing error message
-                    navigation.navigate('Home');
+                    navigation.navigate('Home'); // Bring user to home page
                 } else {
                     setErrorMessage(loginMessage.statusCode + ' : ' + loginMessage.message); // Set the error message to display it
                 }

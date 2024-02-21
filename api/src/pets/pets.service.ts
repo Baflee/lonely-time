@@ -153,7 +153,6 @@ export class PetsService {
   }
 
   async findAllPetsByUserId(getPetDto: GetPetDto): Promise<ResponseErrorRequest> {
-    console.log("user : " + JSON.stringify(getPetDto.userId));
     const userObjectId = new ObjectId(getPetDto.userId);
     const user = await this.userModel.findById(userObjectId);
     if (!user) {
@@ -164,7 +163,6 @@ export class PetsService {
     if (!pets.length) {
       throw { statusCode: 404, message: 'Aucun animal trouver chez cette utilisateur' };
     }
-    console.log("pets : " + JSON.stringify(pets));
     return { statusCode: 200, message: 'Connexion réussie', content: { pets }};
   }
 }

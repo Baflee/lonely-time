@@ -16,7 +16,6 @@ class UsersService {
                     return error.response.data as ResponseErrorRequest;
                 }
             }
-
             return { statusCode: 500, message: 'Erreur interne du serveur' };
         }
     }

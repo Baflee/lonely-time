@@ -15,7 +15,6 @@ export class UsersService {
     try {
       // Check if the email already exists in the database
       const existingUser = await this.userModel.findOne({ email: createUserDto.email });
-      console.log("test !" + " : " + JSON.stringify(createUserDto));
       if (existingUser) {
         throw { statusCode: 409, message: 'L\'email est déjà utilisé' }; // Conflict
       }
@@ -56,7 +55,6 @@ export class UsersService {
   async validateUser(loginUserDto: LoginUserDto) {
     try {
       const user = await this.userModel.findOne({ email: loginUserDto.email });
-      console.log("test !!")
   
       // If the user doesn't exist
       if (!user) {
@@ -78,6 +76,7 @@ export class UsersService {
   
     } catch (error) {
       console.error(error);
+    
   
       if (!error.statusCode) {
         throw { statusCode: 500, message: 'Erreur interne du serveur' };

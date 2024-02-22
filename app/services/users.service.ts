@@ -5,7 +5,7 @@ import { ResponseErrorRequest } from '../../shared/interfaces/content';
 class UsersService {
     async logIn(credentials: User): Promise<ResponseErrorRequest> {
         try {
-            const response = await axios.post('http://192.168.1.14:3000/users/login', credentials);
+            const response = await axios.post('http://10.13.15.140:3000/users/login', credentials);
             // Handle success
             return response.data as ResponseErrorRequest;
         } catch (error) {
@@ -22,7 +22,7 @@ class UsersService {
 
     async signUp(credentials: User): Promise<ResponseErrorRequest>  {
         try {
-            const response = await axios.post('http://192.168.1.14:3000/users/signup', credentials);
+            const response = await axios.post('http://10.13.15.140:3000/users/signup', credentials);
             // Handle success
             return response.data as ResponseErrorRequest;
         } catch (error) {

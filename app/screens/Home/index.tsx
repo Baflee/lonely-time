@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Activi
 import { Pet } from '../../../shared/interfaces/pet';
 import { useAuth } from '../../hooks/auth';
 import { Picker } from '@react-native-picker/picker';
+import LinearGradient from 'react-native-linear-gradient';
 
 const Home = ({ navigation }: { navigation: any }) => {
     const { user, getPets, logout, sendMessage, getMessages } = useAuth();
@@ -14,10 +15,14 @@ const Home = ({ navigation }: { navigation: any }) => {
     const [lastShakeTime, setLastShakeTime] = useState(0);
 
     useEffect(() => {
-        if(user && user._id) {
-            fetchPets(user._id);
-        }
-    }, [user?._id]);
+        const unsubscribe = navigation.addListener('focus', () => {
+            if(user && user._id) {
+                fetchPets(user._id);
+            }
+        });
+    
+        return unsubscribe;
+    }, [navigation, user?._id]);
 
     useEffect(() => {
         const fetchInitialMessages = async () => {
@@ -38,19 +43,15 @@ const Home = ({ navigation }: { navigation: any }) => {
         const eventEmitter = new NativeEventEmitter(NativeModules.ShakeDetector);
     
         const handleShake = (event: any) => {
-            // Assurez-vous d'avoir un délai suffisant entre les secousses pour éviter le spam
             const now = Date.now();
-            if (!isLoading && now - lastShakeTime > 20000 && event && event.message) { // Exemple: 20 secondes de délai
-                // Définissez votre message ici ou utilisez `event.message` si disponible
+            if (!isLoading && now - lastShakeTime > 20000 && event && event.message) {
                 sendShakeMessage(event.message);
                 setLastShakeTime(now);
             }
         };
     
-        // Abonnement à l'événement de secousse
         const subscription = eventEmitter.addListener('onShake', handleShake);
     
-        // Nettoyage
         return () => {
             subscription.remove();
         };
@@ -123,6 +124,7 @@ const Home = ({ navigation }: { navigation: any }) => {
 
     return (
         <View style={styles.container}>
+            <LinearGradient colors={['#EE99C2', '#EE99C2']}>
             <View style={styles.topBar}>
                 <Picker
                     selectedValue={selectedPet ? selectedPet._id : null}
@@ -144,6 +146,7 @@ const Home = ({ navigation }: { navigation: any }) => {
                     <Text style={styles.buttonText}>Déconnexion</Text>
                 </TouchableOpacity>
             </View>
+            </LinearGradient>
             <ScrollView style={styles.historyContainer}>
                 {chatHistory.map((chat, index) => (
                     <View key={index} style={chat.sender === "Toi" ? styles.userMessageContainer : styles.petMessageContainer}>
@@ -180,7 +183,7 @@ const Home = ({ navigation }: { navigation: any }) => {
             </View>
             <View style={styles.chatInputContainer}>
                 <TextInput
-                    placeholder="Type your message..."
+                    placeholder="Taper votre message..."
                     style={styles.chatInput}
                     value={message}
                     onChangeText={setMessage}
@@ -208,7 +211,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 10,
-        backgroundColor: '#EE99C2',
     },
     infoText: {
         color: '#000000',

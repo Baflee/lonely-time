@@ -13,7 +13,7 @@ describe('PetsService', () => {
     describe('getPets', () => {
         it('should return pets on successful fetch', async () => {
             const data = { statusCode: 200, content: { pets: [{ id: '1', name: 'Rex' }] } };
-            mock.onPost('http://192.168.1.14:3000/pets/getPets', { userId }).reply(200, data);
+            mock.onPost('http://10.13.15.140:3000/pets/getPets', { userId }).reply(200, data);
 
             const response = await petsService.getPets(userId);
 
@@ -22,7 +22,7 @@ describe('PetsService', () => {
 
         it('should handle server response error', async () => {
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://192.168.1.14:3000/pets/getPets', { userId }).networkError();
+            mock.onPost('http://10.13.15.140:3000/pets/getPets', { userId }).networkError();
 
             const response = await petsService.getPets(userId);
 
@@ -30,7 +30,7 @@ describe('PetsService', () => {
         });
 
         it('should handle timeout correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/getPets', { userId }).timeout();
+            mock.onPost('http://10.13.15.140:3000/pets/getPets', { userId }).timeout();
 
             const response = await petsService.getPets(userId);
 
@@ -38,7 +38,7 @@ describe('PetsService', () => {
         });
 
         it('should handle unexpected errors correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/getPets', { userId }).reply(() => {
+            mock.onPost('http://10.13.15.140:3000/pets/getPets', { userId }).reply(() => {
                 throw new Error('Unexpected error');
             });
     
@@ -51,7 +51,7 @@ describe('PetsService', () => {
     describe('createPet', () => {
         it('should return response on successful creation', async () => {
             const data = { statusCode: 200, message: 'Animal créé avec succès', content: { pet: { id: '1', name: 'Buddy', animal: 'Dog' } } };
-            mock.onPost('http://192.168.1.14:3000/pets/create').reply(200, data);
+            mock.onPost('http://10.13.15.140:3000/pets/create').reply(200, data);
     
             const response = await petsService.createPet(userId, 'Buddy', 'Dog', ['loyal', 'friendly'], ['fetch']);
     
@@ -60,7 +60,7 @@ describe('PetsService', () => {
     
         it('should handle server response error', async () => {
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://192.168.1.14:3000/pets/create').networkError();
+            mock.onPost('http://10.13.15.140:3000/pets/create').networkError();
     
             const response = await petsService.createPet(userId, 'Buddy', 'Dog', ['loyal', 'friendly'], ['fetch']);
     
@@ -68,7 +68,7 @@ describe('PetsService', () => {
         });
     
         it('should handle timeout correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/create').timeout();
+            mock.onPost('http://10.13.15.140:3000/pets/create').timeout();
     
             const response = await petsService.createPet(userId, 'Buddy', 'Dog', ['loyal', 'friendly'], ['fetch']);
     
@@ -76,7 +76,7 @@ describe('PetsService', () => {
         });
     
         it('should handle unexpected errors correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/create').reply(() => {
+            mock.onPost('http://10.13.15.140:3000/pets/create').reply(() => {
                 throw new Error('Unexpected error');
             });
     
@@ -89,7 +89,7 @@ describe('PetsService', () => {
     describe('getMessages', () => {
         it('should return messages on successful fetch', async () => {
             const data = { statusCode: 200, content: { threadId:"48459594", messages: [{ sender: 'Joe', Message: 'Yeet!' }] } };
-            mock.onPost('http://192.168.1.14:3000/pets/getMessages').reply(200, data);
+            mock.onPost('http://10.13.15.140:3000/pets/getMessages').reply(200, data);
     
             const response = await petsService.getMessages('Rex', '123');
     
@@ -98,7 +98,7 @@ describe('PetsService', () => {
     
         it('should handle server response error', async () => {
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://192.168.1.14:3000/pets/getMessages').networkError();
+            mock.onPost('http://10.13.15.140:3000/pets/getMessages').networkError();
     
             const response = await petsService.getMessages('Rex', '123');
     
@@ -106,7 +106,7 @@ describe('PetsService', () => {
         });
     
         it('should handle timeout correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/getMessages').timeout();
+            mock.onPost('http://10.13.15.140:3000/pets/getMessages').timeout();
     
             const response = await petsService.getMessages('Rex', '123');
     
@@ -114,7 +114,7 @@ describe('PetsService', () => {
         });
     
         it('should handle unexpected errors correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/getMessages').reply(() => {
+            mock.onPost('http://10.13.15.140:3000/pets/getMessages').reply(() => {
                 throw new Error('Unexpected error');
             });
     
@@ -127,7 +127,7 @@ describe('PetsService', () => {
     describe('sendMessage', () => {
         it('should return response on successful send', async () => {
             const data = { statusCode: 200, content: { message: 'Message sent successfully' } };
-            mock.onPost('http://192.168.1.14:3000/pets/speak').reply(200, data);
+            mock.onPost('http://10.13.15.140:3000/pets/speak').reply(200, data);
     
             const response = await petsService.sendMessage('1', 'Hello, world!');
     
@@ -136,7 +136,7 @@ describe('PetsService', () => {
     
         it('should handle server response error', async () => {
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://192.168.1.14:3000/pets/speak').networkError();
+            mock.onPost('http://10.13.15.140:3000/pets/speak').networkError();
     
             const response = await petsService.sendMessage('1', 'Hello, world!');
     
@@ -144,7 +144,7 @@ describe('PetsService', () => {
         });
     
         it('should handle timeout correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/speak').timeout();
+            mock.onPost('http://10.13.15.140:3000/pets/speak').timeout();
     
             const response = await petsService.sendMessage('1', 'Hello, world!');
     
@@ -152,7 +152,7 @@ describe('PetsService', () => {
         });
     
         it('should handle unexpected errors correctly', async () => {
-            mock.onPost('http://192.168.1.14:3000/pets/speak').reply(() => {
+            mock.onPost('http://10.13.15.140:3000/pets/speak').reply(() => {
                 throw new Error('Unexpected error');
             });
     

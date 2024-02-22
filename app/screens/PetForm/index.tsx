@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Button, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Correct import for Picker
 import { useAuth } from '../../hooks/auth';
+import LinearGradient from 'react-native-linear-gradient';
 
 const PetForm = ({ navigation }: { navigation: any }) => {
     const { createPet, user } = useAuth();
@@ -40,7 +41,7 @@ const PetForm = ({ navigation }: { navigation: any }) => {
         'Capybara',
         'Raton laveur',
     ];
-    
+
     const traitOptions = [
         'Amical',
         'Timide',
@@ -51,7 +52,7 @@ const PetForm = ({ navigation }: { navigation: any }) => {
         'Obéissant',
         'Têtu',
     ];
-    
+
     const skillOptions = [
         'Assis',
         'Rapporte',
@@ -62,7 +63,7 @@ const PetForm = ({ navigation }: { navigation: any }) => {
         'Suit au pied',
         'Attrape',
     ];
-    
+
     const handleToggleTrait = (trait: string) => {
         if (personalityTraits.includes(trait)) {
             setPersonalityTraits(personalityTraits.filter(t => t !== trait));
@@ -91,15 +92,14 @@ const PetForm = ({ navigation }: { navigation: any }) => {
     };
 
     return (
+        <LinearGradient colors={['#EE99C2', '#EE99C2']}>
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Ajouter un animal</Text>
-
             <Text style={styles.inputLabel}>Nom : </Text>
             <TextInput
-            style={styles.input}
-            onChangeText={setName}
-            value={name}
-            placeholder="Enter le nom"
+                style={styles.input}
+                onChangeText={setName}
+                value={name}
+                placeholder="Enter le nom"
             />
 
             <Text style={styles.inputLabel}>Animal : </Text>
@@ -141,14 +141,22 @@ const PetForm = ({ navigation }: { navigation: any }) => {
                 ))}
             </View>
 
-            <Button title="Ajouter" onPress={handleAddPet} />
+            <TouchableOpacity onPress={handleAddPet} style={styles.buttonConfirm}>
+                <Text style={styles.textConfirm}>Ajouter un animal</Text>
+            </TouchableOpacity>
 
             {errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
         </ScrollView>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
+    containerGradient: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     container: {
         padding: 20,
     },
@@ -159,6 +167,7 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 18,
         marginBottom: 10,
+        color: '#FFFFFF',
     },
     input: {
         marginBottom: 20,
@@ -166,6 +175,7 @@ const styles = StyleSheet.create({
         borderColor: '#cccccc',
         padding: 10,
         borderRadius: 5,
+        backgroundColor: '#FFFFFF'
     },
     pickerContainer: {
         borderWidth: 1,
@@ -176,11 +186,16 @@ const styles = StyleSheet.create({
     },
     picker: {
         width: '100%',
+        backgroundColor: '#FFFFFF'
     },
     optionsContainer: {
+        borderWidth: 1,
+        borderColor: '#cccccc',
+        borderRadius: 5,
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginBottom: 20,
+        backgroundColor: '#FFFFFF'
     },
     option: {
         margin: 5,
@@ -192,8 +207,8 @@ const styles = StyleSheet.create({
     optionSelected: {
         margin: 5,
         borderWidth: 1,
-        borderColor: '#cccccc',
-        backgroundColor: '#dddddd',
+        borderColor: '#EE99C2',
+        backgroundColor: '#EE99C2',
         padding: 10,
         borderRadius: 5,
     },
@@ -201,6 +216,18 @@ const styles = StyleSheet.create({
         color: 'red',
         marginTop: 10,
     },
+    buttonConfirm: {
+        height: 40,
+        borderWidth: 1,
+        borderColor: '#FFFFFF',
+        justifyContent: 'center',
+        borderRadius: 5,
+        width: '100%',
+        backgroundColor: '#FFFFFF'
+    },
+    textConfirm: {
+        textAlign: 'center',
+    }
 });
 
 export default PetForm;

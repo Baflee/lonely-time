@@ -133,6 +133,12 @@ export class PetsService {
     if (!user) {
       throw { statusCode: 404, message: 'L\'utilisateur n\'existe pas' };
     }
+
+    for (const [key, value] of Object.entries(petProfileData)) {
+      if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        throw { statusCode: 400, message: `Le champ '${key}' est requis et ne peut pas être vide.` };
+      }
+    }
   
     const threadId = await this.createThread();
     

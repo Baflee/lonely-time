@@ -5,11 +5,15 @@ import { usersService } from './users.service';
 describe('UsersService', () => {
     const mock = new MockAdapter(axios);
 
+
+    const baseUrl = 'http://localhost:3000';
+    console.log(baseUrl);
+
     describe('logIn', () => {
         it('should return response on successful login', async () => {
             const credentials = { email: 'testUser', password: 'testPass' };
             const data = { statusCode: 200, message: 'Connexion réussie', content: { authToken: 'authToken', refreshToken: 'refreshToken', user:{ email:"testUser", password:'opkorekgrgererg'} } };
-            mock.onPost('http://10.13.15.140:3000/users/login', credentials).reply(200, data);
+            mock.onPost(`${baseUrl}/users/login`, credentials).reply(200, data);
     
             const response = await usersService.logIn(credentials);
     
@@ -19,7 +23,7 @@ describe('UsersService', () => {
         it('should handle server response error', async () => {
             const credentials = { email: 'testUser', password: 'testPass' };
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://10.13.15.140:3000/users/login', credentials).networkError();
+            mock.onPost(`${baseUrl}/users/login`, credentials).networkError();
     
             const response = await usersService.logIn(credentials);
     
@@ -28,7 +32,7 @@ describe('UsersService', () => {
     
         it('should handle timeout correctly', async () => {
             const credentials = { email: 'testUser', password: 'testPass' };
-            mock.onPost('http://10.13.15.140:3000/users/login', credentials).timeout();
+            mock.onPost(`${baseUrl}/users/login`, credentials).timeout();
     
             const response = await usersService.logIn(credentials);
     
@@ -37,7 +41,7 @@ describe('UsersService', () => {
     
         it('should handle unexpected errors correctly', async () => {
             const credentials = { email: 'testUser', password: 'testPass' };
-            mock.onPost('http://10.13.15.140:3000/users/login', credentials).reply(() => {
+            mock.onPost(`${baseUrl}/users/login`, credentials).reply(() => {
                 throw new Error('Unexpected error');
             });
     
@@ -51,7 +55,7 @@ describe('UsersService', () => {
         it('should return response on successful signup', async () => {
             const credentials = { email: 'test@example.com', password: 'newPass', passwordConfirm: 'newPass' };
             const data = { statusCode: 200, content: { message: 'Votre compte a été créer' } };
-            mock.onPost('http://10.13.15.140:3000/users/signup', credentials).reply(200, data);
+            mock.onPost(`${baseUrl}/users/signup`, credentials).reply(200, data);
     
             const response = await usersService.signUp(credentials);
     
@@ -61,7 +65,7 @@ describe('UsersService', () => {
         it('should handle server response error', async () => {
             const credentials = { username: 'newUser', password: 'newPass', email: 'test@example.com' };
             const errorResponse = { statusCode: 500, message: 'Erreur interne du serveur' };
-            mock.onPost('http://10.13.15.140:3000/users/signup', credentials).networkError();
+            mock.onPost(`${baseUrl}/users/signup`, credentials).networkError();
     
             const response = await usersService.signUp(credentials);
     
@@ -70,7 +74,7 @@ describe('UsersService', () => {
     
         it('should handle timeout correctly', async () => {
             const credentials = { username: 'newUser', password: 'newPass', email: 'test@example.com' };
-            mock.onPost('http://10.13.15.140:3000/users/signup', credentials).timeout();
+            mock.onPost(`${baseUrl}/users/signup`, credentials).timeout();
     
             const response = await usersService.signUp(credentials);
     
@@ -79,7 +83,7 @@ describe('UsersService', () => {
     
         it('should handle unexpected errors correctly', async () => {
             const credentials = { username: 'newUser', password: 'newPass', email: 'test@example.com' };
-            mock.onPost('http://10.13.15.140:3000/users/signup', credentials).reply(() => {
+            mock.onPost(`${baseUrl}/users/signup`, credentials).reply(() => {
                 throw new Error('Unexpected error');
             });
     

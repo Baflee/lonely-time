@@ -88,6 +88,8 @@ export interface AuthContextValue extends State {
     login: (email: string, password: string) => Promise<ResponseErrorRequest>;
     signup: (email: string, password: string, passwordConfirmation:string) => Promise<ResponseErrorRequest>;
     logout: () => Promise<void>;
+    getFcmToken: () => Promise<string | null>;
+    sendNotification: (fcmToken: string, title: string, body: string) => Promise<void>;
     // eslint-disable-next-line no-unused-vars
     getPets: (userId: string) => Promise<ResponseErrorRequest>;
     createPet: (userId:string, name: string, animal:string, personalityTraits:string[], skills:string[]) => Promise<ResponseErrorRequest>;
@@ -100,6 +102,8 @@ export const AuthContext = createContext<AuthContextValue>({
     ...initialState,
     login: () => Promise.resolve({} as ResponseErrorRequest),
     signup: () => Promise.resolve({} as ResponseErrorRequest),
+    getFcmToken: () => Promise.resolve(''),
+    sendNotification: () => Promise.resolve(),
     logout: () => Promise.resolve(),
     getPets: () => Promise.resolve({} as ResponseErrorRequest),
     createPet: () => Promise.resolve({} as ResponseErrorRequest),
@@ -174,6 +178,19 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
         return await usersService.signUp({ email, password, passwordConfirmation });
     }, []);
 
+    const getFcmToken = useCallback(async () => {
+        try {
+            return await AsyncStorage.getItem('FCM_TOKEN');
+        } catch (error) {
+            console.error('Error getting the FCM token', error);
+            return null;
+        }
+    }, []);
+
+    const sendNotification = useCallback(async (fcmToken: string, title: string, body: string) => {
+        await usersService.sendNotification(fcmToken, title, body);
+    }, []);
+
     const getPets = useCallback(async (userId: string): Promise<ResponseErrorRequest> => {
         return await petsService.getPets(userId);
     }, []);
@@ -190,11 +207,6 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
         return await petsService.sendMessage(petId, message);
     }, []);
     
-    /*
-    const setPet = useCallback(async (email: string, password: string, passwordConfirmation: string): Promise<ResponseErrorRequest> => {
-        return await petsService.signUp({ email, password, passwordConfirmation });
-    }, []);
-    */
     const logout = useCallback(async (): Promise<void> => {
         AsyncStorage.removeItem('ACCESS_TOKEN');
         AsyncStorage.removeItem('USER');
@@ -221,6 +233,8 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
                 login,
                 signup,
                 logout,
+                getFcmToken,
+                sendNotification,
                 updateUser, 
                 createPet, 
                 getPets,

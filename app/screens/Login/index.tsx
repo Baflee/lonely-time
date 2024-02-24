@@ -36,7 +36,7 @@ const Login = ({ navigation }: { navigation: any }) => {
     return (
         <LinearGradient colors={['#EE99C2', '#EE99C2']} style={styles.containerGradient}>
             <View style={styles.container}>
-                <Text style={styles.petlifeTitle}>Petlife</Text>
+                <Text style={styles.petlifeTitle}>Petify</Text>
                 <Text style={styles.title}>{isSignUp ? 'Inscription' : 'Connexion'}</Text>
 
                 <TextInput

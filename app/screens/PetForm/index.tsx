@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/auth';
 import LinearGradient from 'react-native-linear-gradient';
 
 const PetForm = ({ navigation }: { navigation: any }) => {
-    const { createPet, user } = useAuth();
+    const { createPet, user, sendNotification, getFcmToken } = useAuth();
     const [name, setName] = useState('');
     const [animal, setAnimal] = useState(''); // This will store the selected animal type
     const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
@@ -85,6 +85,10 @@ const PetForm = ({ navigation }: { navigation: any }) => {
         const petMessage = await createPet(user._id, name, animal, personalityTraits, skills);
         if (petMessage.statusCode >= 200 && petMessage.statusCode < 300) {
             setErrorMessage('');
+            const fcmToken = await getFcmToken();
+            if(fcmToken) {
+                sendNotification(fcmToken, 'Nouvelle animal ajouté', `Un nouvel animal nommé ${name} a été ajouté à votre liste d'animaux`);
+            }
             navigation.navigate('Home');
         } else {
             setErrorMessage(petMessage.statusCode + ' : ' + petMessage.message);

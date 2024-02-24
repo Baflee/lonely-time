@@ -148,7 +148,7 @@ Pour configurer et exécuter le projet, suivez les étapes suivantes :
 ### App (ATTENTION, L'APPLICATION PEUT ÊTRE LENTE À COMMUNIQUER EN FONCTION DE LA PLATEFORME/DE L'ÉMULATEUR UTILISÉS)
 
 2. Assurez-vous d'avoir suivi le guide suivant [https://reactnative.dev/docs/next/environment-setup?guide=native], qui va permettre la mise en place de l'environnement react native.
-3. Ajoutez les données requises au fichier .env à la suite du fichier .env-sample.
+3. Ajoutez les données requises au fichier .env à la suite du fichier .env-sample. (Possible que L'URL_API de dotenv ne marche pas correctement, dans le cas suivant. Changez le lien directement dans les services axios)
 4. Exécutez la commande suivante pour obtenir tous les packages de l'application
 
 ```bash

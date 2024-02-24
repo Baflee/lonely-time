@@ -142,7 +142,7 @@ const Home = ({ navigation }: { navigation: any }) => {
                 <TouchableOpacity onPress={navigateToAddPet} style={styles.addButton}>
                     <Text style={styles.buttonText}>+</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <TouchableOpacity style={styles.logoutButton} onPress={() => handleLogout}>
                     <Text style={styles.buttonText}>Déconnexion</Text>
                 </TouchableOpacity>
             </View>
@@ -189,7 +189,7 @@ const Home = ({ navigation }: { navigation: any }) => {
                     onChangeText={setMessage}
                     editable={!isLoading}
                 />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage} disabled={isLoading}>
+                <TouchableOpacity style={styles.sendButton} onPress={() => handleSendMessage} disabled={isLoading}>
                     {isLoading ? (
                         <ActivityIndicator size="small" color="#ffffff" />
                     ) : (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Button, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Correct import for Picker
 import { useAuth } from '../../hooks/auth';
 import LinearGradient from 'react-native-linear-gradient';
@@ -145,7 +145,7 @@ const PetForm = ({ navigation }: { navigation: any }) => {
                 ))}
             </View>
 
-            <TouchableOpacity onPress={handleAddPet} style={styles.buttonConfirm}>
+            <TouchableOpacity onPress={() => handleAddPet()} style={styles.buttonConfirm}>
                 <Text style={styles.textConfirm}>Ajouter un animal</Text>
             </TouchableOpacity>
 

@@ -11,8 +11,6 @@ class UsersService {
     async logIn(credentials: User): Promise<ResponseErrorRequest> {
         try {
             const response = await axios.post(`${this.baseUrl}/users/login`, credentials);
-            console.error(" RESPONSE : " + response);
-            console.error(" BQSEURL : " + this.baseUrl);
             // Handle success
             return response.data as ResponseErrorRequest;
         } catch (error) {
@@ -23,6 +21,7 @@ class UsersService {
                     return error.response.data as ResponseErrorRequest;
                 }
             }
+
             return { statusCode: 500, message: 'Erreur interne du serveur' };
         }
     }

@@ -1,5 +1,5 @@
 
-# Documentation du Projet
+# Documentation de Petify
 
 ## Explication du Projet Choisi
 
@@ -125,7 +125,18 @@ android {
 }
 ```
 
-   
+7. Génération de l'APK de sortie : Le projet n'a pas de fichier react.gradle. Nous devons regrouper le paquet JavaScript et les ressources dessinables manuellement en faisant ce qui suit dans un terminal :
+
+```bash
+react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+```
+
+8. Tester la version release de l'application
+
+```bash
+cd android && gradlew assembleRelease
+```
+
 ## Configuration et Exécution du Projet
 
 Pour configurer et exécuter le projet, suivez les étapes suivantes :

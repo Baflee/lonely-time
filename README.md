@@ -141,13 +141,37 @@ cd android && gradlew assembleRelease
 
 Pour configurer et exécuter le projet, suivez les étapes suivantes :
 
+
 1. Clonez ce référentiel sur votre machine locale.
-2. Assurez-vous d'avoir installé [prérequis].
-3. [Instructions supplémentaires pour la configuration, par exemple la configuration de la base de données, les clés d'API, etc.].
-4. Pour lancer le projet, exécutez la commande suivante :
+
+
+### App (ATTENTION, L'APPLICATION PEUT ÊTRE LENTE À COMMUNIQUER EN FONCTION DE LA PLATEFORME/DE L'ÉMULATEUR UTILISÉS)
+
+2. Assurez-vous d'avoir suivi le guide suivant [https://reactnative.dev/docs/next/environment-setup?guide=native], qui va permettre la mise en place de l'environnement react native.
+3. Ajoutez les données requises au fichier .env à la suite du fichier .env-sample.
+4. Exécutez la commande suivante pour obtenir tous les packages de l'application
 
 ```bash
-[commande pour lancer le projet]
+npm i
 ```
 
-5. Vous pouvez maintenant accéder au projet en ouvrant [adresse URL ou autre emplacement].
+6. Pour lancer l'app, exécutez la commande suivante :
+
+```bash
+npm start
+```
+
+### Api
+
+5. Ajoutez les données requises au fichier .env à la suite du fichier .env-sample.
+6. Exécutez la commande suivante pour obtenir tous les packages de l'api :
+
+```bash
+yarn install
+```
+
+6. Pour lancer l'api, exécutez la commande suivante :
+
+```bash
+yarn start
+```

@@ -66,7 +66,7 @@ const Login = ({ navigation }: { navigation: any }) => {
 
                 <TouchableOpacity
                     style={styles.buttonConfirm}
-                    onPress={() => handleLoginOrSignup}
+                    onPress={handleLoginOrSignup}
                 >
                     <Text style={styles.text}>{isSignUp ? "S'inscrire" : "Se connecter"}</Text>
                 </TouchableOpacity>

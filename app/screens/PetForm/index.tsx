@@ -145,7 +145,7 @@ const PetForm = ({ navigation }: { navigation: any }) => {
                 ))}
             </View>
 
-            <TouchableOpacity onPress={() => handleAddPet()} style={styles.buttonConfirm}>
+            <TouchableOpacity onPress={handleAddPet} style={styles.buttonConfirm}>
                 <Text style={styles.textConfirm}>Ajouter un animal</Text>
             </TouchableOpacity>
 
